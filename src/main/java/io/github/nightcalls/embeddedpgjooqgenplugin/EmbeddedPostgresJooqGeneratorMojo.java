@@ -23,8 +23,8 @@ import org.jooq.meta.jaxb.Generator;
 import org.jooq.meta.jaxb.Jdbc;
 import org.jooq.meta.postgres.PostgresDatabase;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -121,6 +121,9 @@ public class EmbeddedPostgresJooqGeneratorMojo extends AbstractMojo {
             // Force pg by default
             jooqGenerator.getDatabase().setName(PostgresDatabase.class.getName());
         }
+
+        File targetDirectory = new File(mavenProject.getBasedir(), jooqGenerator.getTarget().getDirectory());
+        jooqGenerator.getTarget().setDirectory(targetDirectory.getAbsolutePath());
 
         Configuration configuration = new Configuration()
                 // For some reason jooq doesn't provide a way to pass db connection directly
