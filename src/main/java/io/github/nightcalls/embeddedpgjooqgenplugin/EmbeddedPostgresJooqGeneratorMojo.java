@@ -15,7 +15,9 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.jooq.codegen.GenerationTool;
+import org.jooq.codegen.JavaGenerator;
 import org.jooq.meta.jaxb.Configuration;
 import org.jooq.meta.jaxb.Generator;
 import org.jooq.meta.jaxb.Jdbc;
@@ -57,6 +59,9 @@ public class EmbeddedPostgresJooqGeneratorMojo extends AbstractMojo {
     @Parameter(alias = "jooq.generator", property = "jooq.generator", required = true)
     private Generator jooqGenerator;
 
+    @Parameter(defaultValue = "${project}", readonly = true)
+    private MavenProject mavenProject;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -91,7 +96,7 @@ public class EmbeddedPostgresJooqGeneratorMojo extends AbstractMojo {
                         "\nchangeLogFile=" + liquibaseChangeLogFile);
                 // Resources are searched for relative to working dir
                 ResourceAccessor resourceAccessor = new FileSystemResourceAccessor(
-                        Paths.get("").toAbsolutePath().toFile()
+                        mavenProject.getBasedir().getAbsoluteFile()
                 );
 
                 // No need to close - will be closed when database is closed
@@ -106,6 +111,11 @@ public class EmbeddedPostgresJooqGeneratorMojo extends AbstractMojo {
 
     private void generateJooq(Log log, EmbeddedPostgres postgres) throws MojoExecutionException {
         log.info("Configuring jOOQ");
+
+        if (jooqGenerator.getName() == null) {
+            // Force pg by default
+            jooqGenerator.setName(JavaGenerator.class.getName());
+        }
 
         if (jooqGenerator.getDatabase().getName() == null) {
             // Force pg by default
